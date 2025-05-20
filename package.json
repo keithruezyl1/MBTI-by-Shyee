@@ -21,7 +21,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -43,6 +45,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.7",
-    "framer-motion": "^12.12.1"
-  }
+    "framer-motion": "^12.12.1",
+    "gh-pages": "^6.3.0"
+  },
+  "homepage": "https://keithruezyl1.github.io/MBTI-by-Shyee"
 }
