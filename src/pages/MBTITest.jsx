@@ -18,10 +18,20 @@ import {
   DialogContent,
   DialogActions,
   Tooltip,
+  useTheme,
+  useMediaQuery,
+  Fade,
+  Zoom,
+  IconButton,
+  FormLabel
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import questions from '../mbti_60_questions.json';
 import { calculateMBTI } from '../utils/mbtiCalculator';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SaveIcon from '@mui/icons-material/Save';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const BgContainer = styled(Container)({
   minHeight: '100vh',
@@ -35,22 +45,26 @@ const BgContainer = styled(Container)({
   overflow: 'hidden',
 });
 
-const StyledPaper = styled(Paper)({
-  padding: '16px 24px 32px 24px',
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
   maxWidth: '700px',
   width: '100%',
-  borderRadius: '18px',
-  boxShadow: '0 8px 32px rgba(44, 62, 80, 0.10)',
-  background: '#fff',
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  background: 'linear-gradient(145deg, #ffffff 0%, #f5f5f5 100%)',
   position: 'relative',
-  marginTop: '32px',
-  marginBottom: '32px',
+  marginTop: theme.spacing(4),
+  marginBottom: theme.spacing(4),
   minHeight: '500px',
-  // maxHeight: '80vh', // Commented out to prevent overflow
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-});
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  }
+}));
 
 const QuestionText = styled(Typography)({
   fontWeight: 700,
@@ -119,42 +133,51 @@ const DevButton = styled(Button)({
   },
 });
 
-const BlurredOverlay = styled(Box)({
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  backdropFilter: 'blur(4px)',
-  zIndex: 1000,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-});
-
-const StyledDialog = styled(Dialog)({
-  '& .MuiDialog-paper': {
-    borderRadius: '16px',
-    padding: '24px',
-    maxWidth: '400px',
-    width: '100%',
-    backgroundColor: '#fff',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-  },
-});
-
-const DialogButton = styled(Button)({
-  borderRadius: '8px',
-  padding: '10px 24px',
-  textTransform: 'none',
-  fontWeight: 600,
-  fontSize: '1rem',
-  transition: 'all 0.2s cubic-bezier(.4,0,.2,1)',
+const QuestionContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  position: 'relative',
   '&:hover': {
-    transform: 'scale(1.04)',
+    '& .help-icon': {
+      opacity: 1,
+    }
+  }
+}));
+
+const HelpIcon = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  right: -40,
+  top: 0,
+  opacity: 0,
+  transition: 'opacity 0.2s ease-in-out',
+  [theme.breakpoints.down('sm')]: {
+    right: 0,
+    top: -40,
+  }
+}));
+
+const StyledFormControl = styled(FormControl)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  '& .MuiFormLabel-root': {
+    color: theme.palette.text.primary,
+    fontWeight: 500,
   },
-});
+  '& .MuiRadio-root': {
+    color: theme.palette.primary.main,
+  },
+  '& .MuiFormControlLabel-label': {
+    fontSize: '1rem',
+  }
+}));
+
+const NavigationButtons = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  marginTop: theme.spacing(4),
+  gap: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+  }
+}));
 
 const MBTITest = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -163,24 +186,15 @@ const MBTITest = () => {
   const [userName, setUserName] = useState('');
   const [profilePhoto, setProfilePhoto] = useState('');
   const [started, setStarted] = useState(false);
-  const [showRefreshDialog, setShowRefreshDialog] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpContent, setHelpContent] = useState('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
-
-  // Handle page refresh
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (started && Object.keys(answers).length > 0) {
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [started, answers]);
 
   // Check for existing progress on mount
   useEffect(() => {
@@ -195,7 +209,6 @@ const MBTITest = () => {
           setAnswers(parsedAnswers);
           setCurrentQuestion(parsedQuestion);
           setStarted(true);
-          setShowRefreshDialog(true);
         }
       } catch (error) {
         console.error('Error parsing stored progress:', error);
@@ -216,15 +229,12 @@ const MBTITest = () => {
   const handleReset = () => {
     setAnswers({});
     setCurrentQuestion(0);
-    setStarted(true);
-    setShowRefreshDialog(false);
     localStorage.removeItem('mbtiAnswers');
     localStorage.removeItem('currentQuestion');
+    setShowResetDialog(false);
   };
 
   const handleContinue = () => {
-    setShowRefreshDialog(false);
-    
     // Find the last unanswered question
     let lastUnansweredIndex = 0;
     for (let i = 0; i < questions.length; i++) {
@@ -257,10 +267,10 @@ const MBTITest = () => {
         return;
       }
       // Calculate MBTI type
-      const mbtiType = calculateMBTI(answers, questions);
+      const mbtiTypeObj = calculateMBTI(answers, questions);
       // Store both answers and result
       localStorage.setItem('mbtiAnswers', JSON.stringify(answers));
-      localStorage.setItem('mbtiResult', mbtiType);
+      localStorage.setItem('mbtiResult', mbtiTypeObj.type);
       navigate('/result');
     }
   };
@@ -297,13 +307,19 @@ const MBTITest = () => {
     }
   }, [navigate]);
 
-  const options = [
-    { value: '1', label: 'Strongly Disagree' },
-    { value: '2', label: 'Disagree' },
-    { value: '3', label: 'Neutral' },
-    { value: '4', label: 'Agree' },
-    { value: '5', label: 'Strongly Agree' },
-  ];
+  const handleHelpClick = (dimension) => {
+    const helpText = {
+      'EI': 'Extraversion (E) vs Introversion (I): How you direct and receive energy',
+      'SN': 'Sensing (S) vs Intuition (N): How you take in information',
+      'TF': 'Thinking (T) vs Feeling (F): How you make decisions',
+      'JP': 'Judging (J) vs Perceiving (P): How you organize your life'
+    };
+    setHelpContent(helpText[dimension]);
+    setShowHelp(true);
+  };
+
+  const currentQuestionData = questions[currentQuestion];
+  const dimension = currentQuestionData.dimension;
 
   return (
     <BgContainer maxWidth={false} disableGutters>
@@ -340,25 +356,58 @@ const MBTITest = () => {
       </Box>
       <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', p: 2 }}>
         {!started ? (
-          <>
-            <Typography variant="h4" align="center" sx={{ fontWeight: 700, mb: 2, color: '#4CAF50' }}>
-              Welcome to the MBTI Test
-            </Typography>
-            <Typography variant="body1" align="center" sx={{ mb: 2 }}>
-              You are about to take the Myers-Briggs Type Indicator (MBTI) test. This test consists of 60 questions and is designed to help you discover your personality type based on your preferences and behaviors.
-            </Typography>
-            <Typography variant="body1" align="center" sx={{ mb: 2 }}>
-              <b>Be as honest as possible</b> with your answers. There are no right or wrong responses. The more truthful you are, the more accurate your result will be.
-            </Typography>
-            <Typography variant="body1" align="center" sx={{ mb: 2 }}>
-              <b>Note:</b> Once you answer a question, you <b>cannot go back</b> to previous questions. Please answer each question carefully before proceeding.
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <NextButton onClick={() => setStarted(true)}>
-                Start Test
-              </NextButton>
+          <Fade in={!started} timeout={800}>
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '70vh',
+            }}>
+              <Paper elevation={4} sx={{
+                p: { xs: 3, sm: 5 },
+                borderRadius: 4,
+                maxWidth: 500,
+                width: '100%',
+                boxShadow: '0 8px 32px rgba(44, 62, 80, 0.10)',
+                textAlign: 'center',
+                background: 'linear-gradient(135deg, #f8fefa 0%, #e6fcf1 100%)',
+              }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, color: '#43A047', mb: 2, letterSpacing: 1 }}>
+                  Welcome to the MBTI Test
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', fontSize: '1.1rem' }}>
+                  You are about to take the Myers-Briggs Type Indicator (MBTI) test. This test consists of 60 questions and is designed to help you discover your personality type based on your preferences and behaviors.
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2, color: 'text.primary', fontWeight: 500 }}>
+                  <b>Be as honest as possible</b> with your answers. There are no right or wrong responses. The more truthful you are, the more accurate your result will be.
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    background: 'linear-gradient(90deg, #43A047 0%, #66bb6a 100%)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '1.2rem',
+                    borderRadius: 2,
+                    px: 5,
+                    py: 1.5,
+                    boxShadow: '0 2px 8px rgba(76,175,80,0.12)',
+                    mb: 1,
+                    '&:hover': {
+                      background: 'linear-gradient(90deg, #388e3c 0%, #43A047 100%)',
+                      transform: 'scale(1.04)',
+                    },
+                  }}
+                  onClick={() => setStarted(true)}
+                >
+                  Start Test
+                </Button>
+              </Paper>
             </Box>
-          </>
+          </Fade>
         ) : (
           <>
             <Typography
@@ -378,87 +427,130 @@ const MBTITest = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
               >
-                <QuestionText>
-                  {questions[currentQuestion].question}
-                </QuestionText>
-                <FormControl component="fieldset" sx={{ width: '100%' }}>
-                  <RadioGroup
-                    value={answers[questions[currentQuestion].id] || ''}
-                    onChange={(e) => handleAnswer(e.target.value)}
+                <QuestionContainer>
+                  <Typography variant="h6" gutterBottom>
+                    {currentQuestionData.question}
+                  </Typography>
+                  <HelpIcon 
+                    className="help-icon"
+                    onClick={() => handleHelpClick(dimension)}
+                    size="small"
                   >
-                    {options.map((option) => (
-                      <OptionCard
-                        key={option.value}
-                        selected={answers[questions[currentQuestion].id] === option.value}
-                        onClick={() => handleAnswer(option.value)}
-                      >
-                        <Radio
-                          checked={answers[questions[currentQuestion].id] === option.value}
-                          value={option.value}
-                          sx={{
-                            color: '#4CAF50',
-                            '&.Mui-checked': {
-                              color: '#4CAF50',
-                            },
-                            marginRight: 2,
-                          }}
-                        />
-                        <Typography variant="body1" sx={{ fontWeight: 500, color: '#222' }}>{option.label}</Typography>
-                      </OptionCard>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
+                    <HelpOutlineIcon />
+                  </HelpIcon>
+
+                  <StyledFormControl component="fieldset">
+                    <FormLabel component="legend">Select your answer:</FormLabel>
+                    <RadioGroup
+                      value={answers[currentQuestionData.id] || ''}
+                      onChange={(e) => handleAnswer(e.target.value)}
+                    >
+                      <FormControlLabel 
+                        value="1" 
+                        control={<Radio />} 
+                        label="Strongly Disagree" 
+                      />
+                      <FormControlLabel 
+                        value="2" 
+                        control={<Radio />} 
+                        label="Disagree" 
+                      />
+                      <FormControlLabel 
+                        value="3" 
+                        control={<Radio />} 
+                        label="Neutral" 
+                      />
+                      <FormControlLabel 
+                        value="4" 
+                        control={<Radio />} 
+                        label="Agree" 
+                      />
+                      <FormControlLabel 
+                        value="5" 
+                        control={<Radio />} 
+                        label="Strongly Agree" 
+                      />
+                    </RadioGroup>
+                  </StyledFormControl>
+                </QuestionContainer>
               </motion.div>
             </AnimatePresence>
             {error && (
               <Typography color="error" sx={{ mt: 2, textAlign: 'center' }}>{error}</Typography>
             )}
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-              <NextButton
-                type="button"
+            <NavigationButtons>
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                disabled={currentQuestion === 0}
+                fullWidth={isMobile}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<SaveIcon />}
+                onClick={() => setShowSaveDialog(true)}
+                fullWidth={isMobile}
+              >
+                Save Progress
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<RestartAltIcon />}
+                onClick={() => setShowResetDialog(true)}
+                fullWidth={isMobile}
+              >
+                Reset
+              </Button>
+              <Button
+                variant="contained"
                 onClick={handleNext}
-                disabled={!answers[questions[currentQuestion].id]}
+                disabled={!answers[currentQuestionData.id]}
+                fullWidth={isMobile}
               >
                 {currentQuestion === questions.length - 1 ? 'See MBTI Result' : 'Next'}
-              </NextButton>
-            </Box>
+              </Button>
+            </NavigationButtons>
           </>
         )}
       </Box>
-      {showRefreshDialog && (
-        <BlurredOverlay>
-          <StyledDialog
-            open={showRefreshDialog}
-            onClose={() => setShowRefreshDialog(false)}
-            aria-labelledby="refresh-dialog-title"
-          >
-            <DialogTitle id="refresh-dialog-title" sx={{ textAlign: 'center', pb: 1 }}>
-              Would you like to continue on the same question?
-            </DialogTitle>
-            <DialogContent>
-              <Typography variant="body1" align="center" color="text.secondary">
-                or start over from the first question?
-              </Typography>
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: 'center', gap: 2, pt: 2 }}>
-              <DialogButton
-                variant="outlined"
-                color="primary"
-                onClick={handleReset}
-              >
-                Reset
-              </DialogButton>
-              <DialogButton
-                variant="contained"
-                color="primary"
-                onClick={handleContinue}
-              >
-                Continue
-              </DialogButton>
-            </DialogActions>
-          </StyledDialog>
-        </BlurredOverlay>
-      )}
+
+      {/* Help Dialog */}
+      <Dialog open={showHelp} onClose={() => setShowHelp(false)}>
+        <DialogTitle>Understanding MBTI Dimensions</DialogTitle>
+        <DialogContent>
+          <Typography>{helpContent}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowHelp(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Save Progress Dialog */}
+      <Dialog open={showSaveDialog} onClose={() => setShowSaveDialog(false)}>
+        <DialogTitle>Progress Saved</DialogTitle>
+        <DialogContent>
+          <Typography>Your progress has been saved. You can continue the test later.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSaveDialog(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reset Confirmation Dialog */}
+      <Dialog open={showResetDialog} onClose={() => setShowResetDialog(false)}>
+        <DialogTitle>Reset Test</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to reset the test? All your progress will be lost.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowResetDialog(false)}>Cancel</Button>
+          <Button onClick={handleReset} color="error">Reset</Button>
+        </DialogActions>
+      </Dialog>
     </BgContainer>
   );
 };
