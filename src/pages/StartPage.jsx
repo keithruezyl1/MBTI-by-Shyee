@@ -13,36 +13,46 @@ import {
 import { motion } from 'framer-motion';
 
 const StyledContainer = styled(Container)({
-  height: '100vh',
+  minHeight: '100vh',
+  width: '100vw',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   overflow: 'hidden',
-  backgroundColor: '#F5F5F5',
+  background: '#F5F5F5',
 });
 
 const StyledPaper = styled(Paper)({
-  padding: '32px',
-  maxWidth: '400px',
+  padding: '40px 32px',
+  maxWidth: '420px',
   width: '100%',
-  borderRadius: '12px',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-  backgroundColor: '#FFFFFF',
+  borderRadius: '20px',
+  boxShadow: '0 8px 32px rgba(44, 62, 80, 0.10)',
+  background: 'transparent',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
 });
 
 const PhotoFrame = styled(Box)({
   width: '120px',
   height: '120px',
   borderRadius: '50%',
-  border: '4px solid #4CAF50',
+  border: '2.5px dashed #4CAF50',
   margin: '0 auto 24px',
   position: 'relative',
   overflow: 'hidden',
   cursor: 'pointer',
-  transition: 'all 0.3s ease-in-out',
+  background: 'linear-gradient(135deg, #e6fcf1 0%, #f8fefa 100%)',
+  transition: 'all 0.3s cubic-bezier(.4,0,.2,1)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   '&:hover': {
+    borderColor: '#43A047',
+    boxShadow: '0 4px 12px rgba(76,175,80,0.10)',
+    background: 'linear-gradient(135deg, #f8fefa 0%, #e6fcf1 100%)',
     transform: 'scale(1.05)',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
   },
 });
 
@@ -52,8 +62,8 @@ const EmptyPhotoFrame = styled(Box)({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  backgroundColor: '#F5F5F5',
-  color: '#757575',
+  backgroundColor: 'transparent',
+  color: '#A5D6A7',
   textAlign: 'center',
   fontSize: '1rem',
   position: 'relative',
@@ -66,8 +76,8 @@ const PhotoFrameWrapper = styled(Box)({
 
 const AddIconCircle = styled(Box)({
   position: 'absolute',
-  bottom: '20px',
-  right: '0px',
+  bottom: '10px',
+  right: '10px',
   width: '36px',
   height: '36px',
   backgroundColor: '#4CAF50',
@@ -77,13 +87,14 @@ const AddIconCircle = styled(Box)({
   justifyContent: 'center',
   boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
   zIndex: 2,
+  border: '2px solid #fff',
 });
 
 const StyledTextField = styled(TextField)({
   '& .MuiOutlinedInput-root': {
     '& fieldset': {
       borderColor: '#E0E0E0',
-      borderRadius: '8px',
+      borderRadius: '10px',
     },
     '&:hover fieldset': {
       borderColor: '#4CAF50',
@@ -92,18 +103,23 @@ const StyledTextField = styled(TextField)({
       borderColor: '#4CAF50',
     },
   },
+  background: '#fff',
 });
 
 const StyledButton = styled(Button)({
-  backgroundColor: '#4CAF50',
+  background: 'linear-gradient(90deg, #43A047 0%, #66bb6a 100%)',
   color: '#FFFFFF',
-  padding: '12px 24px',
-  borderRadius: '8px',
+  padding: '14px 0',
+  borderRadius: '12px',
+  fontWeight: 700,
+  fontSize: '1.1rem',
+  marginTop: '32px',
+  boxShadow: '0 2px 8px rgba(76,175,80,0.10)',
+  transition: 'all 0.3s cubic-bezier(.4,0,.2,1)',
   '&:hover': {
-    backgroundColor: '#43A047',
-    transform: 'scale(1.05)',
+    background: 'linear-gradient(90deg, #388e3c 0%, #43A047 100%)',
+    transform: 'scale(1.04)',
   },
-  transition: 'all 0.3s ease-in-out',
 });
 
 const pageTransition = {
@@ -173,10 +189,19 @@ const StartPage = () => {
             sx={{ 
               fontFamily: "'Inter', sans-serif",
               color: '#212121',
-              marginBottom: '32px'
+              marginBottom: '12px',
+              fontWeight: 800,
+              letterSpacing: 1
             }}
           >
             Set up your profile
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            align="center"
+            sx={{ color: '#388e3c', mb: 3, fontWeight: 500, fontSize: '1rem', opacity: 0.7 }}
+          >
+            Personalize your experience before starting the MBTI test.
           </Typography>
           
           <Box component="form" onSubmit={handleSubmit}>
@@ -225,7 +250,16 @@ const StartPage = () => {
             />
 
             {error && (
-              <Typography color="error" sx={{ mt: 1, textAlign: 'center' }}>{error}</Typography>
+              <Typography color="error" sx={{ 
+                mt: 1, 
+                textAlign: 'center',
+                background: 'rgba(211, 47, 47, 0.08)',
+                color: '#d32f2f',
+                fontWeight: 500,
+                borderRadius: '8px',
+                py: 1,
+                px: 2
+              }}>{error}</Typography>
             )}
 
             <StyledButton

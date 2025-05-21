@@ -189,7 +189,9 @@ const MBTIResult = () => {
                       gutterBottom
                       sx={{ fontWeight: 500 }}
                     >
-                      {typeInfo?.title}
+                      {(result === 'XXXX' || result.includes('X'))
+                        ? "Result Inconclusive"
+                        : typeInfo?.title}
                     </Typography>
                     <Typography 
                       variant="body1" 
@@ -200,7 +202,9 @@ const MBTIResult = () => {
                         color: theme.palette.text.secondary,
                       }}
                     >
-                      {typeInfo?.description}
+                      {(result === 'XXXX' || result.includes('X'))
+                        ? "Your answers were too balanced or neutral to determine a clear MBTI type. Please try to answer more decisively, or retake the test for a more accurate result."
+                        : typeInfo?.description}
                     </Typography>
                   </Paper>
                 </Zoom>

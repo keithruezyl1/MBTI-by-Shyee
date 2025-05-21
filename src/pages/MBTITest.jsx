@@ -49,9 +49,9 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   maxWidth: '700px',
   width: '100%',
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-  background: 'linear-gradient(145deg, #ffffff 0%, #f5f5f5 100%)',
+  borderRadius: theme.spacing(3),
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
   position: 'relative',
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
@@ -59,6 +59,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  border: '1px solid rgba(0, 0, 0, 0.05)',
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
@@ -68,10 +69,11 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 
 const QuestionText = styled(Typography)({
   fontWeight: 700,
-  fontSize: '1.35rem',
+  fontSize: '1.5rem',
   marginBottom: '32px',
-  color: '#222',
+  color: '#1a1a1a',
   textAlign: 'center',
+  lineHeight: 1.4,
 });
 
 const OptionCard = styled(Box)(({ selected }) => ({
@@ -92,29 +94,35 @@ const OptionCard = styled(Box)(({ selected }) => ({
 }));
 
 const StyledProgress = styled(LinearProgress)({
-  height: 8,
-  borderRadius: 6,
-  backgroundColor: '#e0e0e0',
+  height: 10,
+  borderRadius: 8,
+  backgroundColor: 'rgba(76, 175, 80, 0.12)',
   '& .MuiLinearProgress-bar': {
     backgroundColor: '#4CAF50',
-    borderRadius: 6,
+    borderRadius: 8,
+    transition: 'transform 0.4s ease',
   },
 });
 
 const NextButton = styled(Button)({
   backgroundColor: '#4CAF50',
   color: '#fff',
-  borderRadius: '8px',
-  padding: '12px 32px',
+  borderRadius: '12px',
+  padding: '14px 36px',
   fontWeight: 600,
-  fontSize: '1rem',
+  fontSize: '1.1rem',
   marginTop: '16px',
-  boxShadow: '0 2px 8px rgba(76,175,80,0.08)',
-  transition: 'all 0.2s cubic-bezier(.4,0,.2,1)',
+  boxShadow: '0 4px 12px rgba(76,175,80,0.15)',
+  transition: 'all 0.3s cubic-bezier(.4,0,.2,1)',
   '&:hover': {
     backgroundColor: '#43A047',
-    transform: 'scale(1.04)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 16px rgba(76,175,80,0.2)',
   },
+  '&:disabled': {
+    backgroundColor: '#e0e0e0',
+    color: '#9e9e9e',
+  }
 });
 
 const DevButton = styled(Button)({
@@ -156,16 +164,22 @@ const HelpIcon = styled(IconButton)(({ theme }) => ({
 }));
 
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
-  marginTop: theme.spacing(2),
+  marginTop: theme.spacing(3),
   '& .MuiFormLabel-root': {
     color: theme.palette.text.primary,
-    fontWeight: 500,
+    fontWeight: 600,
+    fontSize: '1.1rem',
+    marginBottom: theme.spacing(1),
   },
   '& .MuiRadio-root': {
     color: theme.palette.primary.main,
+    '&.Mui-checked': {
+      color: '#4CAF50',
+    },
   },
   '& .MuiFormControlLabel-label': {
-    fontSize: '1rem',
+    fontSize: '1.05rem',
+    color: '#424242',
   }
 }));
 
@@ -278,7 +292,7 @@ const MBTITest = () => {
   const handleDevShortcut = () => {
     const allAnswers = {};
     questions.forEach(question => {
-      allAnswers[question.id] = '2'; // '2' represents "Disagree"
+      allAnswers[question.id] = '3'; // '3' represents "Neutral"
     });
     setAnswers(allAnswers);
     setCurrentQuestion(questions.length - 1);
@@ -343,18 +357,24 @@ const MBTITest = () => {
           </Typography>
         </Box>
         {process.env.NODE_ENV === 'development' && (
-          <Tooltip title="Development shortcut - Auto-fill all questions with 'Disagree'">
+          <Tooltip title="Development shortcut - Auto-fill all questions with 'Neutral'">
             <DevButton 
               onClick={handleDevShortcut}
               size="small"
               sx={{ mt: 0.5 }}
             >
-              Dev: All Disagree
+              Dev: All Neutral
             </DevButton>
           </Tooltip>
         )}
       </Box>
-      <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', p: 2 }}>
+      <Box sx={{ 
+        width: '100%', 
+        maxWidth: 700, 
+        mx: 'auto', 
+        p: 2,
+        mt: 4
+      }}>
         {!started ? (
           <Fade in={!started} timeout={800}>
             <Box sx={{
@@ -414,9 +434,35 @@ const MBTITest = () => {
               variant="h6"
               component="h2"
               gutterBottom
-              sx={{ fontWeight: 600, color: '#4CAF50', letterSpacing: 1, textAlign: 'center' }}
+              sx={{ 
+                fontWeight: 700, 
+                color: '#2E7D32', 
+                letterSpacing: 0.5, 
+                textAlign: 'center', 
+                position: 'relative',
+                fontSize: '1.25rem',
+                mb: 3
+              }}
             >
               Question {currentQuestion + 1} of {questions.length}
+              <HelpIcon 
+                className="help-icon"
+                onClick={() => handleHelpClick(dimension)}
+                size="small"
+                sx={{ 
+                  position: 'absolute',
+                  right: -40,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  opacity: 1,
+                  color: '#4CAF50',
+                  '&:hover': {
+                    color: '#2E7D32',
+                  }
+                }}
+              >
+                <HelpOutlineIcon />
+              </HelpIcon>
             </Typography>
             <StyledProgress variant="determinate" value={progress} sx={{ mb: 4 }} />
             <AnimatePresence mode="wait">
@@ -428,19 +474,17 @@ const MBTITest = () => {
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
               >
                 <QuestionContainer>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ 
+                    fontSize: '1.4rem',
+                    fontWeight: 600,
+                    color: '#1a1a1a',
+                    mb: 3,
+                    lineHeight: 1.4
+                  }}>
                     {currentQuestionData.question}
                   </Typography>
-                  <HelpIcon 
-                    className="help-icon"
-                    onClick={() => handleHelpClick(dimension)}
-                    size="small"
-                  >
-                    <HelpOutlineIcon />
-                  </HelpIcon>
-
                   <StyledFormControl component="fieldset">
-                    <FormLabel component="legend">Select your answer:</FormLabel>
+                    <FormLabel component="legend" sx={{ mb: 2 }}>Select your answer:</FormLabel>
                     <RadioGroup
                       value={answers[currentQuestionData.id] || ''}
                       onChange={(e) => handleAnswer(e.target.value)}
@@ -449,21 +493,25 @@ const MBTITest = () => {
                         value="1" 
                         control={<Radio />} 
                         label="Strongly Disagree" 
+                        sx={{ mb: 1 }}
                       />
                       <FormControlLabel 
                         value="2" 
                         control={<Radio />} 
                         label="Disagree" 
+                        sx={{ mb: 1 }}
                       />
                       <FormControlLabel 
                         value="3" 
                         control={<Radio />} 
                         label="Neutral" 
+                        sx={{ mb: 1 }}
                       />
                       <FormControlLabel 
                         value="4" 
                         control={<Radio />} 
                         label="Agree" 
+                        sx={{ mb: 1 }}
                       />
                       <FormControlLabel 
                         value="5" 
@@ -476,7 +524,17 @@ const MBTITest = () => {
               </motion.div>
             </AnimatePresence>
             {error && (
-              <Typography color="error" sx={{ mt: 2, textAlign: 'center' }}>{error}</Typography>
+              <Typography color="error" sx={{ 
+                mt: 2, 
+                textAlign: 'center',
+                fontWeight: 500,
+                color: '#d32f2f',
+                backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                padding: '8px 16px',
+                borderRadius: '8px'
+              }}>
+                {error}
+              </Typography>
             )}
             <NavigationButtons>
               <Button
@@ -485,6 +543,16 @@ const MBTITest = () => {
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
                 disabled={currentQuestion === 0}
                 fullWidth={isMobile}
+                sx={{
+                  borderRadius: '12px',
+                  padding: '10px 24px',
+                  borderColor: '#4CAF50',
+                  color: '#4CAF50',
+                  '&:hover': {
+                    borderColor: '#43A047',
+                    backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                  }
+                }}
               >
                 Previous
               </Button>
@@ -493,6 +561,16 @@ const MBTITest = () => {
                 startIcon={<SaveIcon />}
                 onClick={() => setShowSaveDialog(true)}
                 fullWidth={isMobile}
+                sx={{
+                  borderRadius: '12px',
+                  padding: '10px 24px',
+                  borderColor: '#4CAF50',
+                  color: '#4CAF50',
+                  '&:hover': {
+                    borderColor: '#43A047',
+                    backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                  }
+                }}
               >
                 Save Progress
               </Button>
@@ -502,6 +580,13 @@ const MBTITest = () => {
                 startIcon={<RestartAltIcon />}
                 onClick={() => setShowResetDialog(true)}
                 fullWidth={isMobile}
+                sx={{
+                  borderRadius: '12px',
+                  padding: '10px 24px',
+                  '&:hover': {
+                    backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                  }
+                }}
               >
                 Reset
               </Button>
@@ -510,6 +595,20 @@ const MBTITest = () => {
                 onClick={handleNext}
                 disabled={!answers[currentQuestionData.id]}
                 fullWidth={isMobile}
+                sx={{
+                  borderRadius: '12px',
+                  padding: '10px 24px',
+                  backgroundColor: '#4CAF50',
+                  '&:hover': {
+                    backgroundColor: '#43A047',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 16px rgba(76,175,80,0.2)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: '#e0e0e0',
+                    color: '#9e9e9e',
+                  }
+                }}
               >
                 {currentQuestion === questions.length - 1 ? 'See MBTI Result' : 'Next'}
               </Button>
