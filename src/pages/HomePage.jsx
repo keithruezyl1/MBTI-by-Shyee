@@ -20,6 +20,38 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import mbtiQuotes from '../mbti_quotes_by_type.json';
 
+// --- OPENAI API CONFIG ---
+const OPENAI_API_KEY = "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";
+const OPENAI_SYSTEM_PROMPT = `You are an AI that generates witty, personality-specific quotes based on a user’s MBTI type. 
+
+Your job is to create ONE short, unique, and original quote each time you are prompted. The quote must reflect the psychological traits, quirks, worldview, or humor style of the specific MBTI type provided to you. You do not need to explain the quote or the type—just return the quote itself.
+
+💡 Behavior Rules:
+- The quote must be concise (ideally under 30 words).
+- The quote must reflect the personality of the MBTI type provided. Speak *as if* the user with that type is saying or thinking it.
+- The tone must always be *witty*, *clever*, or *philosophically playful*. Dry humor, sarcasm, poetic mischief, and thought-provoking irony are welcome.
+- Quotes must be DIVERSE each time. Do not reuse templates or generic phrasing.
+- You must NOT say the MBTI type out loud or explain it in the quote. Imply the personality traits through the voice or content.
+- Avoid clichés or directly quoting known figures. All quotes must be original and unpredictable.
+- The output must ONLY be the quote. No prefaces, comments, or labels.
+- Never break character or explain what you're doing.
+
+🧠 Example MBTI-quote mappings:
+- INTJ: dry, strategic, detached brilliance with biting insight.
+- ENFP: chaotic joy, random metaphors, and boundless enthusiasm.
+- ISTP: minimal words, max logic, anti-drama energy.
+- INFP: poetic, whimsical, deeply felt yet oddly worded.
+- ESTJ: structured, confident, straight-to-the-point leadership vibes.
+
+🛑 Forbidden:
+- No lists
+- No emoji
+- No quotation marks unless used creatively inside the sentence
+- No repeating earlier quotes verbatim
+
+Your output is consumed by an application—no extra formatting, just raw quote text as the user would say it.
+`;
+
 const HomePage = () => {
   const [userName, setUserName] = useState('');
   const [profilePhoto, setProfilePhoto] = useState('');
@@ -27,6 +59,7 @@ const HomePage = () => {
   const [quote, setQuote] = useState('');
   const [openQuote, setOpenQuote] = useState(false);
   const [openResetDialog, setOpenResetDialog] = useState(false);
+  const [loadingQuote, setLoadingQuote] = useState(false); // Loading state for quote
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -47,13 +80,39 @@ const HomePage = () => {
     }
   }, [navigate]);
 
-  const generateQuote = () => {
-    const quotesForType = mbtiQuotes[mbtiResult] || [];
-    if (quotesForType.length > 0) {
-      const randomIndex = Math.floor(Math.random() * quotesForType.length);
-      setQuote(quotesForType[randomIndex]);
+  const generateQuote = async () => {
+    setLoadingQuote(true);
+    setQuote(""); // Clear previous quote
+    try {
+      const prompt = OPENAI_SYSTEM_PROMPT;
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo-0125",
+          messages: [
+            { role: "system", content: prompt },
+            { role: "user", content: `Generate a quote for ${mbtiResult}` }
+          ],
+          max_tokens: 60,
+          temperature: 1.0,
+          top_p: 1.0,
+          frequency_penalty: 0.5,
+          presence_penalty: 0.3,
+        }),
+      });
+      const data = await response.json();
+      const aiQuote = data.choices?.[0]?.message?.content?.trim() || "No quote generated.";
+      setQuote(aiQuote);
+      setOpenQuote(true);
+    } catch (err) {
+      setQuote("Failed to generate quote. Please try again.");
       setOpenQuote(true);
     }
+    setLoadingQuote(false);
   };
 
   const handleCloseQuote = () => {
@@ -173,6 +232,7 @@ const HomePage = () => {
               size="large"
               onClick={generateQuote}
               startIcon={<AutoAwesomeIcon />}
+              disabled={loadingQuote}
               sx={{
                 py: 1.5,
                 px: 4,
@@ -187,7 +247,7 @@ const HomePage = () => {
                 transition: 'all 0.3s ease'
               }}
             >
-              Generate Daily Quote
+              {loadingQuote ? 'Generating...' : 'Generate Daily Quote'}
             </Button>
           </Box>
 
